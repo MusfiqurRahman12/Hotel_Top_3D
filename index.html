@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>Aura Peak Sanctuary — Boutique Mountain Retreat Above The Clouds</title>
+  <meta name="description" content="Aura Peak Sanctuary is an ultra-luxury modern boutique hotel perched 2,480m atop a solitary mountain peak. Experience continuous scroll-animated walkthroughs of our arrival deck, panoramic glass corridor, master suites, and cantilevered hill track verandas.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- GSAP & ScrollTrigger Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  
+  <style>
+    /* =========================================================
+       1. LUXURY MOUNTAIN HOTEL DESIGN TOKENS
+       ========================================================= */
+    :root {
+      --bg-black: #08090C;
+      --bg-card: rgba(15, 18, 24, 0.75);
+      --bg-card-hover: rgba(22, 27, 36, 0.88);
+      --bg-border: rgba(255, 255, 255, 0.09);
+      --bg-border-gold: rgba(230, 167, 86, 0.40);
+      
+      --accent-gold: #E6A756;
+      --accent-gold-light: #F3C687;
+      --accent-gold-rgb: 230, 167, 86;
+      --accent-pine: #364C3B;
+      --accent-mist: #F4F6F8;
+      
+      --text-white: #FFFFFF;
+      --text-mist: #E8ECEF;
+      --text-gray-300: #A2AAB6;
+      --text-gray-500: #667080;
+
+      --font-body: 'Outfit', sans-serif;
+      --font-serif: 'Cormorant Garamond', serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --radius-sm: 8px;
+      --radius-md: 16px;
+      --radius-lg: 28px;
+      --radius-pill: 9999px;
+
+      --glass-blur: blur(24px);
+      --max-width: 1320px;
+      --header-h: 82px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-black);
+      color: var(--text-white);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #08090C; }
+    ::-webkit-scrollbar-thumb { background: #222936; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent-gold); }
+
+    /* =========================================================
+       2. FIXED BACKGROUND CANVAS & AMBIENT CONTRAST OVERLAY
+       ========================================================= */
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 0;
+      pointer-events: none;
+      background: #000000;
+      overflow: hidden;
+    }
+
+    #animation-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #ambient-overlay {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100dvh;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 12%, rgba(230, 167, 86, 0.08) 0%, transparent 50%),
+                  linear-gradient(
+                    180deg,
+                    rgba(8, 9, 12, 0.40) 0%,
+                    rgba(8, 9, 12, 0.15) 25%,
+                    rgba(8, 9, 12, 0.45) 55%,
+                    rgba(8, 9, 12, 0.82) 80%,
+                    rgba(8, 9, 12, 0.96) 100%
+                  );
+    }
+
+    /* Two-Stage Progressive Preloader */
+    #preloader {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: #060709;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s;
+    }
+    #preloader.loaded {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .preloader-emblem {
+      width: 60px;
+      height: 60px;
+      border: 1px solid rgba(230, 167, 86, 0.4);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+    .preloader-emblem::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border: 1px dashed var(--accent-gold);
+      border-radius: 50%;
+      animation: spinCircle 12s linear infinite;
+    }
+    @keyframes spinCircle {
+      100% { transform: rotate(360deg); }
+    }
+    .preloader-mountain {
+      font-size: 1.6rem;
+      color: var(--accent-gold);
+    }
+    .preloader-title {
+      font-family: var(--font-serif);
+      font-size: 1.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .preloader-track {
+      width: 280px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .preloader-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-gold), #FFDEAA);
+      box-shadow: 0 0 12px var(--accent-gold);
+      transition: width 0.15s ease-out;
+    }
+    .preloader-status {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-gray-300);
+      letter-spacing: 0.06em;
+    }
+
+    /* =========================================================
+       3. NAVIGATION & BOUTIQUE HEADER
+       ========================================================= */
+    #site-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      padding: 1.25rem 2rem;
+      transition: all 0.3s ease;
+    }
+    .nav-shell {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1.85rem;
+      background: rgba(12, 15, 21, 0.72);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--bg-border);
+      border-radius: var(--radius-pill);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: #fff;
+    }
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--accent-gold);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 0.95rem;
+      color: var(--accent-gold);
+      background: rgba(230, 167, 86, 0.08);
+    }
+    .brand-name {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .desktop-nav {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      list-style: none;
+    }
+    .desktop-nav a {
+      color: var(--text-gray-300);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .desktop-nav a:hover {
+      color: var(--accent-gold);
+    }
+
+    .nav-meta-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .weather-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-gold);
+      background: rgba(230, 167, 86, 0.1);
+      border: 1px solid rgba(230, 167, 86, 0.25);
+      padding: 0.35rem 0.85rem;
+      border-radius: var(--radius-pill);
+    }
+
+    .btn-reserve {
+      background: linear-gradient(135deg, var(--accent-gold), #D48E33);
+      color: #08090C;
+      font-weight: 700;
+      font-size: 0.88rem;
+      padding: 0.6rem 1.4rem;
+      border-radius: var(--radius-pill);
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(230, 167, 86, 0.35);
+      transition: all 0.25s ease;
+      letter-spacing: 0.02em;
+    }
+    .btn-reserve:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(230, 167, 86, 0.5);
+    }
+
+    .mobile-hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+    }
+    .mobile-hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: #fff;
+      margin: 4px auto;
+      transition: 0.3s;
+    }
+
+    /* Mobile Drawer */
+    #mobile-drawer {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 8, 11, 0.94);
+      backdrop-filter: blur(36px);
+      -webkit-backdrop-filter: blur(36px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    #mobile-drawer.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #mobile-drawer a {
+      color: #fff;
+      font-family: var(--font-serif);
+      text-decoration: none;
+      font-size: 1.8rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    #mobile-drawer a:hover {
+      color: var(--accent-gold);
+    }
+
+    /* =========================================================
+       4. SCROLL TIMELINE TRACKER (RIGHT SIDE)
+       ========================================================= */
+    #scroll-rail {
+      position: fixed;
+      right: 2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      list-style: none;
+    }
+    .rail-node {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      cursor: pointer;
+      position: relative;
+    }
+    .rail-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-gray-500);
+      opacity: 0;
+      transform: translateX(10px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+      white-space: nowrap;
+      background: rgba(12, 15, 21, 0.85);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--bg-border);
+    }
+    .rail-node:hover .rail-label {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .rail-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      background: transparent;
+      transition: all 0.25s ease;
+    }
+    .rail-node.active .rail-dot {
+      border-color: var(--accent-gold);
+      background: var(--accent-gold);
+      box-shadow: 0 0 15px var(--accent-gold);
+      transform: scale(1.35);
+    }
+    .rail-node.active .rail-label {
+      opacity: 1;
+      transform: translateX(0);
+      color: var(--accent-gold);
+    }
+
+    /* =========================================================
+       5. CONTENT SECTIONS & GSAP ANIMATION TARGETS
+       ========================================================= */
+    #page-content {
+      position: relative;
+      z-index: 10;
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .hotel-section {
+      min-height: 115vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 6rem 0;
+      position: relative;
+    }
+
+    /* Clean Open Hero Section (Bottom-Aligned Portfolio Style) */
+    .hero-clean-section {
+      min-height: calc(100vh - 40px);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-top: 120px;
+      padding-bottom: 50px;
+      gap: 36px;
+    }
+
+    .hero-main-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      align-items: flex-end;
+      gap: 40px;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      color: var(--accent-gold);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .hero-large-title {
+      font-family: var(--font-serif);
+      font-size: clamp(3.4rem, 6.5vw, 5.8rem);
+      font-weight: 600;
+      line-height: 0.98;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+
+    /* Portfolio-Style Dynamic Title Rotator */
+    .title-rotator {
+      position: relative;
+      display: block;
+      min-height: 1.25em;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .title-item {
+      display: block;
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      color: var(--accent-gold);
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+      position: absolute;
+      top: 0;
+      left: 0;
+      white-space: nowrap;
+    }
+
+    .title-item.active {
+      opacity: 1;
+      transform: translateY(0);
+      position: relative;
+    }
+
+    /* Bullet Tags with Dots (from Portfolio) */
+    .hero-bullet-tags {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .bullet-tag-item {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-mist);
+      letter-spacing: 0.03em;
+    }
+
+    .bullet-dot {
+      color: var(--accent-gold);
+      font-weight: 700;
+    }
+
+    /* Right Column: Philosophy & Booking Capsule */
+    .hero-philosophy-box {
+      padding-left: 24px;
+      border-left: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .philosophy-quote {
+      font-family: var(--font-serif);
+      font-size: clamp(1.2rem, 1.8vw, 1.55rem);
+      line-height: 1.35;
+      color: #ffffff;
+      font-weight: 400;
+    }
+
+    .philosophy-desc {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--text-gray-300);
+    }
+
+    .hero-quick-reserve-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(14, 17, 23, 0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--bg-border-gold);
+      padding: 8px 10px 8px 20px;
+      border-radius: var(--radius-pill);
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: fit-content;
+      transition: all 0.25s ease;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-quick-reserve-pill:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-gold);
+      box-shadow: 0 15px 35px rgba(230, 167, 86, 0.3);
+    }
+
+    .pill-arrow-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent-gold);
+      color: #08090C;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+      transition: transform 0.25s ease;
+    }
+
+    .hero-quick-reserve-pill:hover .pill-arrow-circle {
+      transform: rotate(45deg);
+    }
+
+    /* 4-Column Journey Preview Strip */
+    .hero-journey-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .journey-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .journey-item:hover {
+      transform: translateY(-3px);
+    }
+
+    .journey-num {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent-gold);
+    }
+
+    .journey-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .journey-sub {
+      font-size: 0.78rem;
+      color: var(--text-gray-500);
+    }
+
+    /* Scroll Prompt Indicator */
+    .hero-scroll-prompt {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-gray-500);
+    }
+    .mouse-icon {
+      width: 20px;
+      height: 32px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      position: relative;
+    }
+    .mouse-dot {
+      width: 4px;
+      height: 6px;
+      background: var(--accent-gold);
+      border-radius: 2px;
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: wheelRoll 2s infinite;
+    }
+    @keyframes wheelRoll {
+      0% { top: 6px; opacity: 1; }
+      100% { top: 18px; opacity: 0; }
+    }
+
+    /* =========================================================
+       6. GLASS CARDS & GSAP SLIDE-IN STYLES
+       ========================================================= */
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--bg-border);
+      border-radius: var(--radius-lg);
+      padding: 2.75rem 3rem;
+      max-width: 680px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      will-change: transform, opacity;
+    }
+    .glass-card:hover {
+      border-color: var(--bg-border-gold);
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8), 0 0 30px rgba(var(--accent-gold-rgb), 0.12);
+    }
+
+    .section-stage-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-gold);
+      background: rgba(230, 167, 86, 0.12);
+      border: 1px solid rgba(230, 167, 86, 0.3);
+      padding: 0.3rem 0.85rem;
+      border-radius: var(--radius-pill);
+      margin-bottom: 1.25rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .section-headline {
+      font-family: var(--font-serif);
+      font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+      line-height: 1.08;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      margin-bottom: 1.25rem;
+      color: #fff;
+    }
+    .section-headline em {
+      font-style: italic;
+      color: var(--accent-gold);
+    }
+
+    .section-desc {
+      font-size: 1.05rem;
+      color: var(--text-gray-300);
+      line-height: 1.65;
+      margin-bottom: 2rem;
+    }
+
+    .amenities-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 2rem;
+    }
+    .amenity-pill {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.35rem 0.85rem;
+      border-radius: var(--radius-pill);
+      color: var(--text-mist);
+      will-change: transform, opacity;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      will-change: transform, opacity;
+    }
+
+    /* Section Alignments (Asymmetric Flow) */
+    #section-arrival .glass-card { margin-left: auto; }
+    #section-corridor .glass-card { margin-left: 0; }
+    #section-suite .glass-card { margin-left: auto; }
+    #section-spa .glass-card { margin-left: 0; }
+    #section-veranda .glass-card { margin-left: auto; }
+
+    /* =========================================================
+       7. RESERVATION MODAL
+       ========================================================= */
+    #booking-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    #booking-modal.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-box {
+      background: #0E1117;
+      border: 1px solid var(--bg-border-gold);
+      border-radius: var(--radius-lg);
+      width: 580px;
+      max-width: 100%;
+      padding: 2.5rem;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: none;
+      border: none;
+      color: var(--text-gray-300);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .modal-title {
+      font-family: var(--font-serif);
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Footer */
+    #site-footer {
+      padding: 5rem 0 3rem 0;
+      border-top: 1px solid var(--bg-border);
+      background: rgba(6, 7, 10, 0.85);
+      position: relative;
+      z-index: 10;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.5fr repeat(3, 1fr);
+      gap: 3rem;
+      margin-bottom: 3.5rem;
+    }
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 2rem;
+      font-size: 0.8rem;
+      color: var(--text-gray-500);
+      font-family: var(--font-mono);
+    }
+
+    /* =========================================================
+       8. RESPONSIVE MEDIA QUERIES
+       ========================================================= */
+    @media (max-width: 992px) {
+      .hero-main-grid { grid-template-columns: 1fr; gap: 28px; }
+      .hero-philosophy-box { padding-left: 0; border-left: none; }
+      .hero-journey-strip { grid-template-columns: 1fr 1fr; }
+      #scroll-rail { display: none; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .desktop-nav, .weather-pill { display: none; }
+      .mobile-hamburger { display: block; }
+      .glass-card { padding: 2rem 1.5rem; }
+      .hero-journey-strip { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- FIXED 1560-FRAME MULTI-SECTION CANVAS SCRUBBING VIEWPORT -->
+  <div id="canvas-container">
+    <canvas id="animation-canvas"></canvas>
+  </div>
+
+  <!-- AMBIENT CONTRAST GRADIENT OVERLAY -->
+  <div id="ambient-overlay"></div>
+
+  <!-- PROGRESSIVE TWO-STAGE PRELOADER -->
+  <div id="preloader">
+    <div class="preloader-emblem">
+      <span class="preloader-mountain">▲</span>
+    </div>
+    <div class="preloader-title">AURA PEAK SANCTUARY</div>
+    <div class="preloader-track">
+      <div id="preloader-fill" class="preloader-fill"></div>
+    </div>
+    <p id="preloader-label" class="preloader-status">CALIBRATING SUMMIT FLIGHT PATH (0%)...</p>
+  </div>
+
+  <!-- GLOBAL BOUTIQUE HEADER -->
+  <header id="site-header">
+    <div class="nav-shell">
+      <a href="#" class="brand-group">
+        <div class="brand-mark">▲</div>
+        <span class="brand-name">Aura Peak</span>
+      </a>
+
+      <ul class="desktop-nav">
+        <li><a href="#section-hero">Arrival</a></li>
+        <li><a href="#section-arrival">The Hearth</a></li>
+        <li><a href="#section-corridor">Architecture</a></li>
+        <li><a href="#section-suite">Suites</a></li>
+        <li><a href="#section-spa">Mineral Spa</a></li>
+        <li><a href="#section-veranda">Hill Track</a></li>
+      </ul>
+
+      <div class="nav-meta-actions">
+        <div class="weather-pill">
+          <span>⛅ 2,480m</span>
+          <span style="opacity:0.4">|</span>
+          <span>12°C Mist</span>
+        </div>
+
+        <button class="btn-reserve" onclick="openReservationModal()">
+          Reserve Suite
+        </button>
+
+        <button id="mobile-toggle" class="mobile-hamburger" aria-label="Open navigation menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MOBILE FULLSCREEN FROSTED DRAWER -->
+  <div id="mobile-drawer">
+    <a href="#section-hero" class="mobile-link">01 · Above the Clouds</a>
+    <a href="#section-arrival" class="mobile-link">02 · Arrival Veranda</a>
+    <a href="#section-corridor" class="mobile-link">03 · Panoramic Corridor</a>
+    <a href="#section-suite" class="mobile-link">04 · The Master Suite</a>
+    <a href="#section-spa" class="mobile-link">05 · Volcanic Stone Spa</a>
+    <a href="#section-veranda" class="mobile-link">06 · Hill Track Finale</a>
+    <button class="btn-reserve" style="margin-top:1.5rem;" onclick="openReservationModal()">Reserve Suite</button>
+  </div>
+
+  <!-- INTERACTIVE SCROLL RAIL TRACKER (RIGHT SIDE) -->
+  <ul id="scroll-rail">
+    <li class="rail-node active" data-target="#section-hero">
+      <span class="rail-label">01 Aerial Reveal</span>
+      <div class="rail-dot"></div>
+    </li>
+    <li class="rail-node" data-target="#section-arrival">
+      <span class="rail-label">02 Arrival Hearth</span>
+      <div class="rail-dot"></div>
+    </li>
+    <li class="rail-node" data-target="#section-corridor">
+      <span class="rail-label">03 Glass Corridor</span>
+      <div class="rail-dot"></div>
+    </li>
+    <li class="rail-node" data-target="#section-suite">
+      <span class="rail-label">04 Master Suite</span>
+      <div class="rail-dot"></div>
+    </li>
+    <li class="rail-node" data-target="#section-spa">
+      <span class="rail-label">05 Stone Spa</span>
+      <div class="rail-dot"></div>
+    </li>
+    <li class="rail-node" data-target="#section-veranda">
+      <span class="rail-label">06 Hill Track View</span>
+      <div class="rail-dot"></div>
+    </li>
+  </ul>
+
+  <!-- MAIN SCROLLABLE CONTENT WITH 6 SYNCHRONIZED SECTIONS -->
+  <div id="page-content">
+
+    <!-- STAGE 1: CLEAN OPEN HERO SECTION WITH PORTFOLIO TEXT ANIMATION -->
+    <section id="section-hero" class="hero-clean-section" data-stage="0">
+      <div class="hero-main-grid">
+        <!-- Left Column: Eyebrow, Main Title, Title Rotator, Bullet Tags -->
+        <div class="hero-left-column">
+          <div class="hero-eyebrow">
+            <span>AURA PEAK SANCTUARY</span>
+            <span style="opacity:0.4">·</span>
+            <span>ELEVATION 2,480M</span>
+          </div>
+
+          <div class="hero-large-title">
+            Perched High
+            <span class="title-rotator">
+              <span class="title-item active">Above The Clouds.</span>
+              <span class="title-item">Where Mist Dissolves.</span>
+              <span class="title-item">Silent Alpine Haven.</span>
+              <span class="title-item">The Infinite Horizon.</span>
+            </span>
+          </div>
+
+          <div class="hero-bullet-tags">
+            <span class="bullet-tag-item">Boutique Mountain Chalet</span>
+            <span class="bullet-dot">·</span>
+            <span class="bullet-tag-item">Helicopter Access</span>
+            <span class="bullet-dot">·</span>
+            <span class="bullet-tag-item">Volcanic Stone Spa</span>
+            <span class="bullet-dot">·</span>
+            <span class="bullet-tag-item">180° Panoramic Ridge</span>
+          </div>
+        </div>
+
+        <!-- Right Column: Philosophy Quote & Quick Reserve Pill -->
+        <div class="hero-philosophy-box">
+          <div class="philosophy-quote">
+            “An unhurried sanctuary carved into the highest alpine ridge. Minimalist cedar, raw stone, and infinite mountain light.”
+          </div>
+          <p class="philosophy-desc">
+            Suspended 2,480 meters above the valleys, Aura Peak blends Nordic architectural restraint with the elemental beauty of drifting cloud inversions.
+          </p>
+          <div class="hero-quick-reserve-pill" onclick="openReservationModal()">
+            <span>Reserve Your Sanctuary · From $850 / Night</span>
+            <div class="pill-arrow-circle">↗</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Row: 4-Column Journey Preview Strip (Portfolio Style) -->
+      <div class="hero-journey-strip">
+        <div class="journey-item" onclick="document.querySelector('#section-arrival').scrollIntoView({behavior:'smooth'})">
+          <span class="journey-num">01 / ARRIVAL</span>
+          <span class="journey-title">The Cedar Hearth</span>
+          <span class="journey-sub">Sunken granite fire pit & mulled wine</span>
+        </div>
+        <div class="journey-item" onclick="document.querySelector('#section-corridor').scrollIntoView({behavior:'smooth'})">
+          <span class="journey-num">02 / ARCHITECTURE</span>
+          <span class="journey-title">Glass Gallery</span>
+          <span class="journey-sub">Nordic oak slats & panoramic mist</span>
+        </div>
+        <div class="journey-item" onclick="document.querySelector('#section-suite').scrollIntoView({behavior:'smooth'})">
+          <span class="journey-num">03 / ACCOMMODATION</span>
+          <span class="journey-title">Master Cloud Suite</span>
+          <span class="journey-sub">King bed & suspended hearth fire</span>
+        </div>
+        <div class="journey-item" onclick="document.querySelector('#section-veranda').scrollIntoView({behavior:'smooth'})">
+          <span class="journey-num">04 / THE FINALE</span>
+          <span class="journey-title">Hill Track Veranda</span>
+          <span class="journey-sub">Private balcony above rolling valleys</span>
+        </div>
+      </div>
+
+      <div class="hero-scroll-prompt">
+        <div class="mouse-icon"><div class="mouse-dot"></div></div>
+        <span>Scroll down to dive through the clouds into the mountain walkthrough</span>
+      </div>
+    </section>
+
+    <!-- STAGE 2: ARRIVAL VERANDA & SUNKEN FIRE PIT (240 frames: Section_2/) -->
+    <!-- GSAP: Slide-In from Right -->
+    <section id="section-arrival" class="hotel-section" data-stage="1">
+      <div class="glass-card slide-from-right">
+        <div class="section-stage-tag">STAGE 02 · THE ARRIVAL DECK</div>
+        <h2 class="section-headline">
+          An Unhurried <em>Mountain Welcome.</em>
+        </h2>
+        <p class="section-desc">
+          Step off the helicopter arrival pad onto heated black cedar decking. The crisp alpine breeze is softened by a sunken granite hearth with crackling firelight, offering panoramic views across the misty cliff edges.
+        </p>
+
+        <div class="amenities-row">
+          <span class="amenity-pill">🔥 Sunken Granite Hearth</span>
+          <span class="amenity-pill">🚁 Private Helipad Access</span>
+          <span class="amenity-pill">🍷 Spiced Mulled Wine Welcome</span>
+          <span class="amenity-pill">🧣 Heated Cedar Boardwalk</span>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn-reserve" onclick="openReservationModal()">Explore Arrival Services</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAGE 3: PANORAMIC GLASS CORRIDOR (240 frames: Section_3/) -->
+    <!-- GSAP: Slide-In from Left -->
+    <section id="section-corridor" class="hotel-section" data-stage="2">
+      <div class="glass-card slide-from-left">
+        <div class="section-stage-tag">STAGE 03 · THE INTERIOR CORRIDOR</div>
+        <h2 class="section-headline">
+          Architecture in <em>Dialogue with Mist.</em>
+        </h2>
+        <p class="section-desc">
+          Passing through frameless glass doors into silent temperature-controlled serenity. Acoustic vertical oak wall slats, heated slate flooring, and a continuous glass gallery looking out over drifting clouds.
+        </p>
+
+        <div class="amenities-row">
+          <span class="amenity-pill">🌲 Natural Scandinavian Oak</span>
+          <span class="amenity-pill">🪟 Frameless Curtain Glass</span>
+          <span class="amenity-pill">🌡️ Radiant Floor Heating</span>
+          <span class="amenity-pill">🕯️ Hidden Warm LED Illumination</span>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn-reserve" onclick="openReservationModal()">View Architectural Gallery</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAGE 4: THE MASTER BEDROOM SUITE (240 frames: Section_4/) -->
+    <!-- GSAP: Split Slide-In (Card from Right + Amenities staggered from Left) -->
+    <section id="section-suite" class="hotel-section" data-stage="3">
+      <div class="glass-card split-slide-in">
+        <div class="section-stage-tag">STAGE 04 · THE MASTER BEDROOM SUITE</div>
+        <h2 class="section-headline">
+          Floating Fire & <em>Cloud-Level Slumber.</em>
+        </h2>
+        <p class="section-desc">
+          Rest inside an architectural haven. A custom platform king bed dressed in 800-thread Egyptian waffle cotton, suspended blackened-steel hearth, and wrap-around corner glass revealing sunrise over mountain peaks.
+        </p>
+
+        <div class="amenities-row">
+          <span class="amenity-pill">🛏️ King Cloud Bed</span>
+          <span class="amenity-pill">🔥 Suspended Fireplace</span>
+          <span class="amenity-pill">🎵 Curated Vinyl & Bang & Olufsen</span>
+          <span class="amenity-pill">🌄 180° Corner Panorama</span>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn-reserve" onclick="openReservationModal()">Book This Suite · $850/night</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAGE 5: SPA BATHROOM & SOAKING TUB (240 frames: Section_5/) -->
+    <!-- GSAP: Inward Slide from Left with Parallax Depth -->
+    <section id="section-spa" class="hotel-section" data-stage="4">
+      <div class="glass-card inward-slide-left">
+        <div class="section-stage-tag">STAGE 05 · EN-SUITE STONE SPA</div>
+        <h2 class="section-headline">
+          Volcanic Mineral Soak <em>Above the Abyss.</em>
+        </h2>
+        <p class="section-desc">
+          Immerse yourself in a sculpted basalt soaking tub filled with natural spring water, positioned flush against panoramic glass. Watch valley fog roll beneath your feet as gentle steam warms the morning air.
+        </p>
+
+        <div class="amenities-row">
+          <span class="amenity-pill">🛁 Monolithic Stone Soaking Tub</span>
+          <span class="amenity-pill">🌿 Wild Mountain Salt Blends</span>
+          <span class="amenity-pill">🚿 Dual Rainfall Steam Shower</span>
+          <span class="amenity-pill">✨ Champagne Brass Fixtures</span>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn-reserve" onclick="openReservationModal()">Reserve Spa Experience</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAGE 6: PRIVATE VERANDA & HILL TRACK FINALE (300 frames: Section_6/) -->
+    <!-- GSAP: Grand Split Slide-In (Card from Right + Floating Actions Upward) -->
+    <section id="section-veranda" class="hotel-section" data-stage="5">
+      <div class="glass-card grand-split-slide">
+        <div class="section-stage-tag">STAGE 06 · THE HILL TRACK VERANDA</div>
+        <h2 class="section-headline">
+          The Endless <em>Green Horizon.</em>
+        </h2>
+        <p class="section-desc">
+          Step onto your private cantilevered timber balcony suspended over the ridge. With a steaming ceramic mug in hand, gaze across miles of winding hill tracks, pine ridges, and drifting cloud rivers.
+        </p>
+
+        <div class="amenities-row">
+          <span class="amenity-pill">☕ Artisan Handcrafted Coffee</span>
+          <span class="amenity-pill">🛋️ Teak Lounge & Alpaca Blankets</span>
+          <span class="amenity-pill">🔭 Celestron Stargazing Telescope</span>
+          <span class="amenity-pill">🍳 Sunrise Private Chef Breakfast</span>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn-reserve" onclick="openReservationModal()">Reserve Your Mountain Escape</button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /page-content -->
+
+  <!-- RESERVATION MODAL -->
+  <div id="booking-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeReservationModal()">&times;</button>
+      <h3 class="modal-title">Reserve Your Sanctuary</h3>
+      <p style="color:var(--text-gray-300); font-size:0.9rem; margin-bottom:1.75rem;">
+        Experience alpine tranquility atop the mountain peak. All bookings include private helicopter or 4WD transfer, daily chef breakfast, and spa access.
+      </p>
+
+      <div style="display:flex; flex-direction:column; gap:1.25rem;">
+        <div>
+          <label style="font-family:var(--font-mono); font-size:0.75rem; color:var(--accent-gold);">CHOSEN SUITE</label>
+          <select style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); padding:0.75rem; border-radius:8px; color:#fff; font-size:0.95rem; margin-top:0.35rem;">
+            <option>Master Cloud Suite with Floating Hearth ($850 / night)</option>
+            <option>Hill Track Cantilevered Chalet ($1,150 / night)</option>
+            <option>Grand Mountain Summit Penthouse ($1,750 / night)</option>
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div>
+            <label style="font-family:var(--font-mono); font-size:0.75rem; color:var(--accent-gold);">CHECK-IN DATE</label>
+            <input type="date" value="2026-10-14" style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); padding:0.75rem; border-radius:8px; color:#fff; font-size:0.9rem; margin-top:0.35rem;">
+          </div>
+          <div>
+            <label style="font-family:var(--font-mono); font-size:0.75rem; color:var(--accent-gold);">CHECK-OUT DATE</label>
+            <input type="date" value="2026-10-19" style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); padding:0.75rem; border-radius:8px; color:#fff; font-size:0.9rem; margin-top:0.35rem;">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-family:var(--font-mono); font-size:0.75rem; color:var(--accent-gold);">GUEST CONTACT (EMAIL / PHONE)</label>
+          <input type="email" placeholder="guest@sanctuary.com" style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); padding:0.75rem; border-radius:8px; color:#fff; font-size:0.9rem; margin-top:0.35rem;">
+        </div>
+
+        <button class="btn-reserve" style="width:100%; padding:0.95rem; margin-top:0.5rem;" onclick="confirmReservation()">
+          Confirm Sanctuary Reservation
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOUTIQUE FOOTER -->
+  <footer id="site-footer">
+    <div id="page-content" style="padding-top:0;">
+      <div class="footer-grid">
+        <div>
+          <div class="brand-group" style="margin-bottom:1rem;">
+            <div class="brand-mark">▲</div>
+            <span class="brand-name">Aura Peak</span>
+          </div>
+          <p style="color:var(--text-gray-300); font-size:0.88rem; line-height:1.6; max-width:320px;">
+            A secluded boutique alpine chalet perched 2,480m above the clouds. Where architecture dissolves into mountain mist and horizon.
+          </p>
+        </div>
+
+        <div>
+          <h4 style="font-size:0.95rem; font-weight:700; color:#fff; margin-bottom:1.25rem;">Chambers & Suites</h4>
+          <ul style="list-style:none; display:flex; flex-direction:column; gap:0.6rem; font-size:0.85rem; color:var(--text-gray-300);">
+            <li><a href="#section-suite" style="color:inherit; text-decoration:none;">Master Cloud Suite</a></li>
+            <li><a href="#section-suite" style="color:inherit; text-decoration:none;">The Hearth Penthouse</a></li>
+            <li><a href="#section-veranda" style="color:inherit; text-decoration:none;">Hill Track Villa</a></li>
+            <li><a href="#section-spa" style="color:inherit; text-decoration:none;">Private Mineral Tub Suite</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="font-size:0.95rem; font-weight:700; color:#fff; margin-bottom:1.25rem;">Sanctuary Living</h4>
+          <ul style="list-style:none; display:flex; flex-direction:column; gap:0.6rem; font-size:0.85rem; color:var(--text-gray-300);">
+            <li><span>Basalt Hydrotherapy Spa</span></li>
+            <li><span>Helicopter Alpine Transfer</span></li>
+            <li><span>Foraged Mountain Dining</span></li>
+            <li><span>Stargazing Observatory</span></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="font-size:0.95rem; font-weight:700; color:#fff; margin-bottom:1.25rem;">Location & Summit</h4>
+          <ul style="list-style:none; display:flex; flex-direction:column; gap:0.6rem; font-size:0.85rem; color:var(--text-gray-300);">
+            <li><span>📍 Ridge Peak Pinnacle</span></li>
+            <li><span>⛰️ Elevation: 2,480m</span></li>
+            <li><span>🚁 Coordinates: 46°35'N 8°12'E</span></li>
+            <li><span>📞 Private Concierge: +1 (800) 248-AURA</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 Aura Peak Sanctuary. All rights reserved.</span>
+        <span>A LUXURY CHALET EXPERIENCE ABOVE THE CLOUDS</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================
+       9. JAVASCRIPT: 6-STAGE 1560-FRAME SCRUBBING ENGINE & GSAP
+       ========================================================= -->
+  <script>
+    /* =========================================================
+       MULTI-SECTION CANVAS SCRUBBING ENGINE
+       Chronological Order:
+       1. hero       (300 frames: 001 - 300)
+       2. Section_2  (240 frames: 001 - 240)
+       3. Section_3  (240 frames: 001 - 240)
+       4. Section_4  (240 frames: 001 - 240)
+       5. Section_5  (240 frames: 001 - 240)
+       6. Section_6  (300 frames: 001 - 300)
+       Total Frames: 1,560
+       ========================================================= */
+    (function initMountainHotelEngine() {
+      'use strict';
+
+      const STAGES = [
+        { folder: 'hero', count: 300, name: 'Above The Clouds' },
+        { folder: 'Section_2', count: 240, name: 'Arrival Deck & Hearth' },
+        { folder: 'Section_3', count: 240, name: 'Panoramic Corridor' },
+        { folder: 'Section_4', count: 240, name: 'Master Bedroom Suite' },
+        { folder: 'Section_5', count: 240, name: 'Volcanic Stone Spa' },
+        { folder: 'Section_6', count: 300, name: 'Hill Track Veranda' }
+      ];
+
+      // Calculate cumulative start frames and total
+      let cumulative = 0;
+      STAGES.forEach(st => {
+        st.start = cumulative;
+        cumulative += st.count;
+      });
+      const TOTAL_GLOBAL_FRAMES = cumulative; // 1560
+
+      const canvas = document.getElementById('animation-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d', { alpha: false });
+
+      const preloader = document.getElementById('preloader');
+      const progressBar = document.getElementById('preloader-fill');
+      const statusText = document.getElementById('preloader-label');
+
+      const imageCache = new Map();
+      const loadingState = new Map(); // 1=loading, 2=loaded, -1=error
+
+      let targetProgress = 0;
+      let currentProgress = 0;
+      let lastRenderedGlobalFrame = -1;
+
+      function resolveFrameLocation(globalIndex) {
+        const clamped = Math.max(0, Math.min(globalIndex, TOTAL_GLOBAL_FRAMES - 1));
+        for (let i = 0; i < STAGES.length; i++) {
+          const st = STAGES[i];
+          if (clamped >= st.start && clamped < st.start + st.count) {
+            return {
+              folder: st.folder,
+              localIndex: clamped - st.start,
+              stageIndex: i
+            };
+          }
+        }
+        return {
+          folder: STAGES[STAGES.length - 1].folder,
+          localIndex: STAGES[STAGES.length - 1].count - 1,
+          stageIndex: STAGES.length - 1
+        };
+      }
+
+      function getFrameUrl(folder, localIndex) {
+        const pad = String(localIndex + 1).padStart(3, '0');
+        return `${folder}/ezgif-frame-${pad}.jpg`;
+      }
+
+      function requestFrame(folder, localIndex, callback) {
+        const key = `${folder}/${localIndex}`;
+        if (loadingState.get(key) === 2) {
+          if (callback) callback(imageCache.get(key));
+          return;
+        }
+        if (loadingState.get(key) === 1) return;
+
+        loadingState.set(key, 1);
+        const img = new Image();
+        img.src = getFrameUrl(folder, localIndex);
+        img.onload = () => {
+          loadingState.set(key, 2);
+          imageCache.set(key, img);
+          if (callback) callback(img);
+        };
+        img.onerror = () => {
+          loadingState.set(key, -1);
+          if (callback) callback(null);
+        };
+      }
+
+      function updateScrollProgress() {
+        const scrollTop = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+        const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        targetProgress = Math.min(Math.max(scrollTop / maxScroll, 0), 1);
+
+        // Preload around active scroll head
+        const activeGlobal = Math.round(targetProgress * (TOTAL_GLOBAL_FRAMES - 1));
+        for (let r = 1; r <= 8; r++) {
+          const locPlus = resolveFrameLocation(activeGlobal + r);
+          requestFrame(locPlus.folder, locPlus.localIndex);
+          const locMinus = resolveFrameLocation(activeGlobal - r);
+          requestFrame(locMinus.folder, locMinus.localIndex);
+        }
+
+        updateActiveRailAndSection(targetProgress);
+      }
+
+      window.addEventListener('scroll', updateScrollProgress, { passive: true });
+      window.addEventListener('touchmove', updateScrollProgress, { passive: true });
+
+      const railNodes = document.querySelectorAll('.rail-node');
+      function updateActiveRailAndSection(progress) {
+        const activeGlobal = Math.round(progress * (TOTAL_GLOBAL_FRAMES - 1));
+        const loc = resolveFrameLocation(activeGlobal);
+
+        railNodes.forEach((node, idx) => {
+          if (idx === loc.stageIndex) {
+            node.classList.add('active');
+          } else {
+            node.classList.remove('active');
+          }
+        });
+      }
+
+      // Viewport Sizing & Mobile URL-bar Collapse Guard
+      let canvasW = 0, canvasH = 0, dpr = 1, lastW = 0, lastH = 0;
+
+      function resize() {
+        const newW = window.innerWidth;
+        const newH = window.innerHeight;
+
+        const isFirst = canvasW === 0;
+        const isWidthChange = newW !== lastW;
+        const isMajorHeightChange = Math.abs(newH - lastH) > 120;
+
+        if (isFirst || isWidthChange || isMajorHeightChange) {
+          lastW = newW;
+          lastH = newH;
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          canvasW = newW;
+          canvasH = newH;
+
+          canvas.width = Math.floor(canvasW * dpr);
+          canvas.height = Math.floor(canvasH * dpr);
+          canvas.style.width = canvasW + 'px';
+          canvas.style.height = canvasH + 'px';
+
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.scale(dpr, dpr);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+        }
+
+        updateScrollProgress();
+        drawGlobalFrame(Math.round(currentProgress * (TOTAL_GLOBAL_FRAMES - 1)));
+      }
+
+      window.addEventListener('resize', resize);
+      window.addEventListener('orientationchange', () => setTimeout(resize, 120));
+
+      function drawGlobalFrame(globalIndex) {
+        const loc = resolveFrameLocation(globalIndex);
+        let img = imageCache.get(`${loc.folder}/${loc.localIndex}`);
+
+        if (!img || !img.complete || img.naturalWidth === 0) {
+          for (let off = 1; off < 40; off++) {
+            const b = resolveFrameLocation(globalIndex - off);
+            const a = resolveFrameLocation(globalIndex + off);
+            const imgB = imageCache.get(`${b.folder}/${b.localIndex}`);
+            if (imgB && imgB.complete && imgB.naturalWidth > 0) {
+              img = imgB;
+              break;
+            }
+            const imgA = imageCache.get(`${a.folder}/${a.localIndex}`);
+            if (imgA && imgA.complete && imgA.naturalWidth > 0) {
+              img = imgA;
+              break;
+            }
+          }
+        }
+
+        if (!img || !img.complete || img.naturalWidth === 0) return;
+
+        const imgRatio = img.naturalWidth / img.naturalHeight;
+        const canvasRatio = canvasW / canvasH;
+
+        let rW, rH, rX, rY;
+        if (canvasRatio > imgRatio) {
+          rW = canvasW;
+          rH = canvasW / imgRatio;
+          rX = 0;
+          rY = (canvasH - rH) / 2;
+        } else {
+          rH = canvasH;
+          rW = canvasH * imgRatio;
+          rX = (canvasW - rW) / 2;
+          rY = 0;
+        }
+
+        ctx.fillStyle = '#08090C';
+        ctx.fillRect(0, 0, canvasW, canvasH);
+        ctx.drawImage(img, rX, rY, rW, rH);
+      }
+
+      function renderLoop() {
+        const diff = targetProgress - currentProgress;
+        if (Math.abs(diff) > 0.0001) {
+          currentProgress += diff * 0.10;
+        } else {
+          currentProgress = targetProgress;
+        }
+
+        const fIdx = Math.round(currentProgress * (TOTAL_GLOBAL_FRAMES - 1));
+        if (fIdx !== lastRenderedGlobalFrame) {
+          drawGlobalFrame(fIdx);
+          lastRenderedGlobalFrame = fIdx;
+        }
+
+        requestAnimationFrame(renderLoop);
+      }
+
+      function startEngine() {
+        resize();
+
+        let dismissed = false;
+        function dismissPreloader() {
+          if (dismissed) return;
+          dismissed = true;
+          if (progressBar) progressBar.style.width = '100%';
+          if (statusText) statusText.textContent = 'SUMMIT SANCTUARY SYNCHRONIZED (100%)...';
+          setTimeout(() => {
+            if (preloader) preloader.classList.add('loaded');
+            pumpBackgroundFrames();
+            initGSAPAnimations();
+          }, 200);
+        }
+
+        setTimeout(dismissPreloader, 1500);
+        if (preloader) {
+          preloader.addEventListener('click', dismissPreloader);
+          preloader.style.cursor = 'pointer';
+        }
+
+        requestFrame('hero', 0, () => drawGlobalFrame(0));
+
+        const keyCheckpoints = [
+          { folder: 'hero', local: 0 },
+          { folder: 'hero', local: 150 },
+          { folder: 'Section_2', local: 0 },
+          { folder: 'Section_2', local: 120 },
+          { folder: 'Section_3', local: 0 },
+          { folder: 'Section_3', local: 120 },
+          { folder: 'Section_4', local: 0 },
+          { folder: 'Section_4', local: 120 },
+          { folder: 'Section_5', local: 0 },
+          { folder: 'Section_5', local: 120 },
+          { folder: 'Section_6', local: 0 },
+          { folder: 'Section_6', local: 150 }
+        ];
+
+        let loadedKeys = 0;
+        keyCheckpoints.forEach(cp => {
+          requestFrame(cp.folder, cp.local, () => {
+            loadedKeys++;
+            const pct = Math.min(100, Math.round((loadedKeys / keyCheckpoints.length) * 100));
+            if (progressBar) progressBar.style.width = pct + '%';
+            if (statusText) statusText.textContent = `SYNCHRONIZING SUMMIT CAMERAS (${pct}%)...`;
+
+            if (loadedKeys >= keyCheckpoints.length) {
+              dismissPreloader();
+            }
+          });
+        });
+
+        renderLoop();
+      }
+
+      function pumpBackgroundFrames() {
+        let stageIdx = 0;
+        let localIdx = 0;
+
+        function pump() {
+          let active = 0;
+          while (active < 4 && stageIdx < STAGES.length) {
+            const st = STAGES[stageIdx];
+            const key = `${st.folder}/${localIdx}`;
+            if (!loadingState.has(key)) {
+              active++;
+              requestFrame(st.folder, localIdx, () => {
+                active--;
+                pump();
+              });
+            }
+            localIdx += 2;
+            if (localIdx >= st.count) {
+              localIdx = 0;
+              stageIdx++;
+            }
+          }
+        }
+
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(pump, { timeout: 1000 });
+        } else {
+          setTimeout(pump, 200);
+        }
+      }
+
+      startEngine();
+    })();
+
+    /* =========================================================
+       HERO TITLE ROTATOR (FROM PORTFOLIO ARCHITECTURE)
+       ========================================================= */
+    (function initTitleRotator() {
+      const items = document.querySelectorAll('.title-rotator .title-item');
+      if (items.length <= 1) return;
+      let current = 0;
+
+      setInterval(() => {
+        items[current].classList.remove('active');
+        current = (current + 1) % items.length;
+        items[current].classList.add('active');
+      }, 2800);
+    })();
+
+    /* =========================================================
+       GSAP SCROLLTRIGGER ANIMATIONS: SLIDE-IN FROM SIDES,
+       SPLIT SLIDE-IN & INWARD SLIDE
+       ========================================================= */
+    function initGSAPAnimations() {
+      if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+      gsap.registerPlugin(ScrollTrigger);
+
+      // 1. Clean Hero Entrance Animation
+      const heroTl = gsap.timeline({ delay: 0.1 });
+      heroTl.from('.hero-eyebrow', { opacity: 0, y: 24, duration: 0.9, ease: 'power3.out' })
+            .from('.hero-large-title', { opacity: 0, y: 35, duration: 1.1, ease: 'power3.out' }, '-=0.6')
+            .from('.hero-bullet-tags', { opacity: 0, y: 20, duration: 0.8, ease: 'power3.out' }, '-=0.6')
+            .from('.hero-philosophy-box', { opacity: 0, x: 50, duration: 1.1, ease: 'power3.out' }, '-=0.8')
+            .from('.hero-journey-strip .journey-item', { opacity: 0, y: 25, stagger: 0.1, duration: 0.8, ease: 'power3.out' }, '-=0.6')
+            .from('.hero-scroll-prompt', { opacity: 0, duration: 0.8, ease: 'power2.out' }, '-=0.4');
+
+      // 2. Stage 2 (Arrival): Slide-In from Right
+      gsap.from('#section-arrival .slide-from-right', {
+        scrollTrigger: {
+          trigger: '#section-arrival',
+          start: 'top 80%',
+          end: 'top 30%',
+          scrub: 0.9,
+        },
+        x: 150,
+        opacity: 0,
+        ease: 'power3.out'
+      });
+      gsap.from('#section-arrival .amenity-pill', {
+        scrollTrigger: {
+          trigger: '#section-arrival',
+          start: 'top 65%',
+          toggleActions: 'play reverse play reverse'
+        },
+        scale: 0.8,
+        opacity: 0,
+        y: 20,
+        stagger: 0.08,
+        duration: 0.7,
+        ease: 'back.out(1.7)'
+      });
+
+      // 3. Stage 3 (Corridor): Slide-In from Left
+      gsap.from('#section-corridor .slide-from-left', {
+        scrollTrigger: {
+          trigger: '#section-corridor',
+          start: 'top 80%',
+          end: 'top 30%',
+          scrub: 0.9,
+        },
+        x: -150,
+        opacity: 0,
+        ease: 'power3.out'
+      });
+      gsap.from('#section-corridor .amenity-pill', {
+        scrollTrigger: {
+          trigger: '#section-corridor',
+          start: 'top 65%',
+          toggleActions: 'play reverse play reverse'
+        },
+        scale: 0.8,
+        opacity: 0,
+        x: -25,
+        stagger: 0.08,
+        duration: 0.7,
+        ease: 'back.out(1.7)'
+      });
+
+      // 4. Stage 4 (Master Suite): Split Slide-In (Card from Right + Inward Elements)
+      gsap.from('#section-suite .split-slide-in', {
+        scrollTrigger: {
+          trigger: '#section-suite',
+          start: 'top 80%',
+          end: 'top 30%',
+          scrub: 0.9,
+        },
+        x: 160,
+        opacity: 0,
+        ease: 'power3.out'
+      });
+      gsap.from('#section-suite .section-stage-tag', {
+        scrollTrigger: {
+          trigger: '#section-suite',
+          start: 'top 65%',
+          toggleActions: 'play reverse play reverse'
+        },
+        x: -40,
+        opacity: 0,
+        duration: 0.8,
+        ease: 'power3.out'
+      });
+      gsap.from('#section-suite .amenity-pill', {
+        scrollTrigger: {
+          trigger: '#section-suite',
+          start: 'top 60%',
+          toggleActions: 'play reverse play reverse'
+        },
+        scale: 0.82,
+        opacity: 0,
+        y: 20,
+        stagger: 0.08,
+        duration: 0.6,
+        ease: 'back.out(1.5)'
+      });
+
+      // 5. Stage 5 (Volcanic Stone Spa): Inward Slide from Left with Depth Parallax
+      gsap.from('#section-spa .inward-slide-left', {
+        scrollTrigger: {
+          trigger: '#section-spa',
+          start: 'top 80%',
+          end: 'top 30%',
+          scrub: 0.9,
+        },
+        x: -150,
+        y: 40,
+        opacity: 0,
+        ease: 'power3.out'
+      });
+      gsap.from('#section-spa .amenity-pill', {
+        scrollTrigger: {
+          trigger: '#section-spa',
+          start: 'top 65%',
+          toggleActions: 'play reverse play reverse'
+        },
+        scale: 0.85,
+        opacity: 0,
+        x: 30,
+        stagger: 0.08,
+        duration: 0.7,
+        ease: 'back.out(1.6)'
+      });
+
+      // 6. Stage 6 (Hill Track Veranda): Grand Split Slide-In
+      gsap.from('#section-veranda .grand-split-slide', {
+        scrollTrigger: {
+          trigger: '#section-veranda',
+          start: 'top 80%',
+          end: 'top 30%',
+          scrub: 0.9,
+        },
+        x: 160,
+        opacity: 0,
+        ease: 'power3.out'
+      });
+      gsap.from('#section-veranda .card-actions', {
+        scrollTrigger: {
+          trigger: '#section-veranda',
+          start: 'top 60%',
+          toggleActions: 'play reverse play reverse'
+        },
+        y: 40,
+        opacity: 0,
+        duration: 0.9,
+        ease: 'power3.out'
+      });
+    }
+
+    /* =========================================================
+       UI CONTROLS & RESERVATION MODAL
+       ========================================================= */
+    const modal = document.getElementById('booking-modal');
+    window.openReservationModal = function() {
+      if (modal) modal.classList.add('open');
+    };
+    window.closeReservationModal = function() {
+      if (modal) modal.classList.remove('open');
+    };
+    window.confirmReservation = function() {
+      alert('Aura Peak Sanctuary Reservation:\n\nThank you for choosing the mountain summit retreat. Our private concierge will reach out within 2 hours to confirm your helicopter arrival window and custom dietary requests.');
+      closeReservationModal();
+    };
+
+    document.querySelectorAll('.rail-node').forEach(node => {
+      node.addEventListener('click', () => {
+        const targetId = node.getAttribute('data-target');
+        const targetEl = document.querySelector(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    const mobileBtn = document.getElementById('mobile-toggle');
+    const mobileDrawer = document.getElementById('mobile-drawer');
+    if (mobileBtn && mobileDrawer) {
+      mobileBtn.addEventListener('click', () => mobileDrawer.classList.toggle('open'));
+      mobileDrawer.querySelectorAll('.mobile-link').forEach(link => {
+        link.addEventListener('click', () => mobileDrawer.classList.remove('open'));
+      });
+    }
+  </script>
+</body>
+</html>

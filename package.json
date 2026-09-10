@@ -1,0 +1,9 @@
+{
+  "name": "hotel-on-top-of-the-mountain",
+  "version": "1.0.0",
+  "description": "Ultra-Luxury Mountain Boutique Hotel with 6-Stage 1560-Frame Canvas Scrubbing Experience",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}
