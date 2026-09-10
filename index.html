@@ -98,6 +98,23 @@
       display: block;
       width: 100%;
       height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    #hero-loop-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      z-index: 2;
+      opacity: 1;
+      transition: opacity 0.35s ease-out;
     }
 
     #cloud-mist-canvas {
@@ -107,7 +124,7 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 1;
+      z-index: 3;
       opacity: 1;
       transition: opacity 0.4s ease;
     }
@@ -891,6 +908,7 @@
   <!-- FIXED 1560-FRAME MULTI-SECTION CANVAS SCRUBBING VIEWPORT -->
   <div id="canvas-container">
     <canvas id="animation-canvas"></canvas>
+    <video id="hero-loop-video" src="hero_loop.mp4" autoplay loop muted playsinline preload="auto"></video>
     <canvas id="cloud-mist-canvas"></canvas>
   </div>
 
@@ -1316,10 +1334,9 @@
       // =========================================================
       const HERO_CLOUD_CONFIG = {
         enabled: true,               // Master switch: Live cloud loop ON/OFF
-        enableFramePingPong: true,   // Subtle 0-16 frame cinemagraph breathing
+        useHeroVideo: true,          // Use inserted hero_loop.mp4 video loop for hero
         enableAtmosphericMist: true, // Drifting procedural mountain mist
-        pingPongRange: 16,           // Frames to oscillate across (hero/001 to 017)
-        breathingSpeed: 0.0011,      // Smooth wave speed (~5.7s full period)
+        fadeScrollProgress: 0.035,   // Scroll progress where video cross-fades into canvas scrubbing
       };
 
       window.HERO_CLOUD_CONFIG = HERO_CLOUD_CONFIG;
@@ -1406,6 +1423,7 @@
         HERO_CLOUD_CONFIG.enabled = !HERO_CLOUD_CONFIG.enabled;
         const btn = document.getElementById('hero-cloud-toggle');
         const lbl = document.getElementById('cloud-toggle-label');
+        const heroVideo = document.getElementById('hero-loop-video');
         if (btn && lbl) {
           if (HERO_CLOUD_CONFIG.enabled) {
             btn.classList.remove('is-static');
@@ -1413,6 +1431,15 @@
           } else {
             btn.classList.add('is-static');
             lbl.textContent = 'Cloud Flow: Static';
+          }
+        }
+        if (heroVideo) {
+          if (HERO_CLOUD_CONFIG.enabled && targetProgress <= HERO_CLOUD_CONFIG.fadeScrollProgress) {
+            heroVideo.style.opacity = '1';
+            heroVideo.play().catch(() => {});
+          } else {
+            heroVideo.style.opacity = '0';
+            heroVideo.pause();
           }
         }
         if (mistCanvas) {
@@ -1619,26 +1646,28 @@
           currentProgress = targetProgress;
         }
 
-        // Determine hero loop blend weight
-        const isNearHeroTop = (targetProgress <= 0.002);
-        if (HERO_CLOUD_CONFIG.enabled && isNearHeroTop) {
-          // Smoothly ramp up idle breathing
-          heroLoopBlend += (1 - heroLoopBlend) * 0.06;
-        } else {
-          // Smoothly hand off back to scroll-driven frames
-          heroLoopBlend += (0 - heroLoopBlend) * 0.18;
-          if (heroLoopBlend < 0.001) heroLoopBlend = 0;
+        // Seamless Video Cross-Fade Handshake with Canvas Flight
+        const heroVideo = document.getElementById('hero-loop-video');
+        if (heroVideo) {
+          if (HERO_CLOUD_CONFIG.enabled && HERO_CLOUD_CONFIG.useHeroVideo) {
+            const fadeThreshold = HERO_CLOUD_CONFIG.fadeScrollProgress;
+            const videoOpacity = Math.max(0, Math.min(1, 1 - (currentProgress / fadeThreshold)));
+            heroVideo.style.opacity = videoOpacity;
+
+            if (videoOpacity <= 0.01) {
+              if (!heroVideo.paused) heroVideo.pause();
+            } else {
+              if (heroVideo.paused) heroVideo.play().catch(() => {});
+            }
+          } else {
+            heroVideo.style.opacity = '0';
+            if (!heroVideo.paused) heroVideo.pause();
+          }
         }
 
-        // Compute active frame
+        // Canvas active frame is cleanly driven by scroll progress
         const scrollFrame = currentProgress * (TOTAL_GLOBAL_FRAMES - 1);
-        let activeGlobalFrame = Math.round(scrollFrame);
-
-        if (HERO_CLOUD_CONFIG.enabled && HERO_CLOUD_CONFIG.enableFramePingPong && heroLoopBlend > 0.001) {
-          const osc = (Math.sin(now * HERO_CLOUD_CONFIG.breathingSpeed) * 0.5 + 0.5);
-          const loopFrame = osc * HERO_CLOUD_CONFIG.pingPongRange;
-          activeGlobalFrame = Math.round(scrollFrame * (1 - heroLoopBlend) + loopFrame * heroLoopBlend);
-        }
+        const activeGlobalFrame = Math.round(scrollFrame);
 
         if (activeGlobalFrame !== lastRenderedGlobalFrame) {
           drawGlobalFrame(activeGlobalFrame);
@@ -1667,6 +1696,11 @@
 
       function startEngine() {
         resize();
+
+        const heroVideo = document.getElementById('hero-loop-video');
+        if (heroVideo) {
+          heroVideo.play().catch(e => console.log('Autoplay handled:', e));
+        }
 
         let dismissed = false;
         function dismissPreloader() {
